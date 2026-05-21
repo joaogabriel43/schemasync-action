@@ -1,0 +1,37 @@
+name: 'SchemaSync SQL Analyzer'
+description: 'Analyzes modified .sql files in a PR for breaking changes and posts an idempotent comment.'
+inputs:
+  schemasync-url:
+    description: 'The URL of the SchemaSync API.'
+    required: true
+  schemasync-token:
+    description: 'The JWT token for authenticating with SchemaSync.'
+    required: true
+  project-id:
+    description: 'The UUID of the project in SchemaSync.'
+    required: true
+  fail-on:
+    description: 'The severity threshold to fail the action. Can be BREAKING, WARNING, or INFO.'
+    required: false
+    default: 'BREAKING'
+  github-token:
+    description: 'The GitHub token (secrets.GITHUB_TOKEN) to post comments.'
+    required: true
+outputs:
+  analysis-result:
+    description: 'The JSON result array containing analyses.'
+    value: ${{ steps.analyze.outputs.result }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Run SchemaSync Analysis
+      id: analyze
+      shell: bash
+      env:
+        SCHEMASYNC_URL: ${{ inputs.schemasync-url }}
+        SCHEMASYNC_TOKEN: ${{ inputs.schemasync-token }}
+        PROJECT_ID: ${{ inputs.project-id }}
+        FAIL_ON: ${{ inputs.fail-on }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        bash ${{ github.action_path }}/analyze.sh
